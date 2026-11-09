@@ -1,5 +1,7 @@
 /* Public content is rendered as text. Private file access is enforced by database/storage policies. */
-const P=window.PORTFOLIO,C=window.PORTFOLIO_CONFIG;
+const P=window.PORTFOLIO,C=window.PORTFOLIO_CONFIG||{};
+C.supabaseUrl=String(C.supabaseUrl||'').trim().replace(/\/+$/,'');
+C.publishableKey=String(C.publishableKey||'').trim();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={design:'설계',fluid:'해석 · 유동',solid:'해석 · 고체 / FEM',ai:'AI 활용'};
@@ -39,18 +41,23 @@ async function api(path,{method='GET',body,raw=false}={}){
  if(raw&&method==='GET')return response.blob();const text=await response.text();return text?JSON.parse(text):null;
 }
 async function busy(form,action){const button=form.querySelector('button');button.disabled=true;try{await action();}catch(err){status(err.message);}finally{button.disabled=false;}}
-$('#email-form').addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{verifiedEmail=$('#login-email').value.trim().toLowerCase();await api('/auth/v1/otp',{method:'POST',body:{email:verifiedEmail,create_user:true}});$('#otp-form').hidden=false;status('인증 메일을 확인해 주세요. 메일에 표시된 인증번호를 입력하면 로그인됩니다.');$('#otp').focus();});});
-$('#otp-form').addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{session=await api('/auth/v1/verify',{method:'POST',body:{email:verifiedEmail,token:$('#otp').value.trim(),type:'email'}});$('#otp').value='';await loadLibrary();});});
-$('#logout').onclick=async()=>{try{await api('/auth/v1/logout',{method:'POST'});}catch{}session=null;admin=false;approved=false;$('#library-files').replaceChildren();$('#requests').replaceChildren();$('#admin-panel').hidden=true;$('#otp-form').hidden=true;await loadLibrary();};
+$('#email-form').addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{
+ verifiedEmail=$('#login-email').value.trim().toLowerCase();
+ const redirect=new URL('./',location.href);redirect.search='';redirect.hash='';
+ await api('/auth/v1/otp?redirect_to='+encodeURIComponent(redirect.href),{method:'POST',body:{email:verifiedEmail,create_user:true}});
+ status('로그인 링크를 보냈습니다. 메일의 링크를 클릭하면 이메일 확인 후 접근 요청이 등록됩니다. 이미 승인된 계정은 바로 자료실을 이용할 수 있습니다.');
+});});
+$('#logout').onclick=async()=>{try{await api('/auth/v1/logout',{method:'POST'});}catch{}session=null;admin=false;approved=false;$('#library-files').replaceChildren();$('#requests').replaceChildren();$('#admin-panel').hidden=true;await loadLibrary();};
 async function loadLibrary(){
  $('#login-panel').hidden=!!session;$('#member-panel').hidden=!session;$('#admin-panel').hidden=true;$('#request-access').hidden=true;$('#library-files').replaceChildren();
  if(!configured()){status('자료실 연결 준비 중 · 증명서와 원본 파일은 아직 등록되지 않았습니다.');$('#email-form button').disabled=true;return;}
- if(!session){status('이메일 인증 후 승인 상태를 확인할 수 있습니다.');return;}
+ $('#email-form button').disabled=false;
+ if(!session){status('메일의 로그인 링크로 이메일을 확인해 주세요.');return;}
  $('#member-email').textContent=session.user.email;
  try{
   admin=await api('/rest/v1/rpc/is_portfolio_admin',{method:'POST',body:{}});approved=await api('/rest/v1/rpc/can_download_portfolio',{method:'POST',body:{}});
   $('#admin-panel').hidden=!admin;
-  if(!approved){const requests=await api('/rest/v1/access_requests?select=status');status(requests.length?'다운로드 권한 승인 대기 중입니다. 관리자가 승인한 후 자료실을 다시 열어 주세요.':'아직 다운로드 권한이 없습니다. 아래 버튼으로 관리자에게 승인을 요청하세요.');$('#request-access').hidden=!!requests.length;return;}
+  if(!approved){const requests=await api('/rest/v1/access_requests?select=status');status(requests.length?'다운로드 권한 승인 대기 중입니다. 관리자가 승인한 후 자료실을 다시 열어 주세요.':'아직 다운로드 권한이 없습니다. 아래 버튼으로 관리자에게 승인을 요청하세요.');$('#request-access').hidden=false;$('#request-access').textContent=requests.length?'관리자에게 알림 다시 보내기':'다운로드 권한 요청';return;}
   status(admin?'관리자 계정입니다. 자료 등록과 이메일 승인·회수를 관리할 수 있습니다.':'승인된 계정입니다. 등록된 자료를 다운로드할 수 있습니다.');
   const files=await api('/rest/v1/portfolio_files?select=*&order=created_at.desc');const shown=selectedCategory?files.filter(f=>f.category===selectedCategory):files;
   if(selectedCategory){const showAll=document.createElement('button');showAll.className='small-button';showAll.textContent='전체 자료 보기';showAll.onclick=()=>{selectedCategory=null;loadLibrary();};$('#library-files').append(showAll);}
@@ -59,7 +66,35 @@ async function loadLibrary(){
   if(admin)await loadRequests();
  }catch(err){status(err.message);}
 }
-$('#request-access').onclick=async()=>{const button=$('#request-access');button.disabled=true;try{await api('/rest/v1/access_requests',{method:'POST',body:{user_id:session.user.id,email:session.user.email.toLowerCase()}});await loadLibrary();}catch(err){status(err.message);}finally{button.disabled=false;}};
+async function submitAccessRequest(){
+ const result=await api('/functions/v1/request-access',{method:'POST',body:{}});
+ await loadLibrary();
+ status(result.notification==='sent'?'접근 요청이 등록되었고 관리자에게 알림 메일을 보냈습니다. 승인 후 자료실을 다시 열어 주세요.':result.notification==='already_sent'?'이미 관리자에게 알림을 보냈습니다. 승인 후 자료실을 다시 열어 주세요.':result.notification==='approved'?'승인된 계정입니다. 자료를 다운로드할 수 있습니다.':'요청은 저장되었습니다. 관리자 알림 메일을 보내지 못했습니다. 잠시 후 알림 다시 보내기를 눌러 주세요.');
+}
+$('#request-access').onclick=async()=>{const button=$('#request-access');button.disabled=true;try{await submitAccessRequest();}catch(err){status(err.message);}finally{button.disabled=false;}};
 async function loadRequests(){const requests=await api('/rest/v1/access_requests?select=*&order=created_at.desc');$('#requests').replaceChildren();if(!requests.length)$('#requests').textContent='아직 승인 요청이 없습니다.';for(const request of requests){const row=document.createElement('div');row.className='request-row';const label=document.createElement('span');label.textContent=request.email+' · '+(request.status==='approved'?'승인됨':'대기 중');const button=document.createElement('button');button.className='small-button';button.textContent=request.status==='approved'?'승인 회수':'승인';button.onclick=async()=>{button.disabled=true;try{await api('/rest/v1/access_requests?user_id=eq.'+encodeURIComponent(request.user_id),{method:'PATCH',body:{status:request.status==='approved'?'pending':'approved'}});await loadRequests();}catch(err){status(err.message);}finally{button.disabled=false;}};row.append(label,button);$('#requests').append(row);}}
 $('#upload-form').addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{const file=$('#private-file').files[0];if(!file)return;if(file.size>50*1024*1024)throw Error('50MB 이하의 파일을 선택해 주세요. 큰 프로젝트는 분할 압축해 등록할 수 있습니다.');const object_path=crypto.randomUUID()+'/'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');await api('/storage/v1/object/portfolio-private/'+object_path,{method:'POST',body:file,raw:true});try{await api('/rest/v1/portfolio_files',{method:'POST',body:{title:$('#file-title').value.trim(),category:$('#file-category').value,object_path,original_name:file.name}});}catch(err){try{await api('/storage/v1/object/portfolio-private',{method:'DELETE',body:{prefixes:[object_path]}});}catch{}throw err;}e.target.reset();await loadLibrary();status('비공개 파일이 등록되었습니다. 승인된 계정만 다운로드할 수 있습니다.');});});
 function saveBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+
+// Supabase's default ConfirmationURL returns an implicit-flow session in the fragment.
+async function receiveEmailLink(){
+ const params=new URLSearchParams(location.hash.slice(1));
+ if(!params.has('access_token')&&!params.has('error')&&!params.has('error_description'))return;
+ const token=params.get('access_token');
+ history.replaceState(null,'',location.pathname+location.search);
+ $('#library-dialog').showModal();
+ if(!token){status('로그인 링크가 만료되었거나 사용할 수 없습니다. 이메일을 입력해 새 링크를 요청해 주세요.');return;}
+ try{
+  // Do not trust the fragment's user identity: validate the bearer token with Auth.
+  session={access_token:token};
+  const user=await api('/auth/v1/user');
+  if(!user.id||!user.email||!user.email_confirmed_at)throw Error('이메일 확인을 완료하지 못했습니다. 새 로그인 링크를 요청해 주세요.');
+  session.user=user;
+  await loadLibrary();
+  if(!admin&&!approved)await submitAccessRequest();
+ }catch(err){
+  if(!session?.user){session=null;await loadLibrary();}
+  status(err.message);
+ }
+}
+receiveEmailLink();
