@@ -11,7 +11,114 @@ function toast(message){$('#toast').textContent=message;$('#toast').style.displa
 function art(index,category){const illustrations=[`<g transform="translate(210 100) rotate(-25)" fill="none" stroke="#5b8299"><path d="M-100-40Q0-90 100-40V40Q0 90-100 40Z" fill="#ccdee6" stroke-width="2"/><ellipse rx="41" ry="53" stroke-width="15" stroke="#8aabbc" fill="#e8eff2"/><path d="M-80-50V50M80-50V50M-100 0H-45M45 0H100"/></g>`,`<g fill="none" stroke="#7c9374"><path d="M85 150H350M85 150V32"/><path d="M85 150L130 98Q145 91 160 93T220 65T300 50L330 74" stroke-width="3"/><path d="M130 98V150M220 65V150M300 50V150" stroke-dasharray="3 5" opacity=".5"/></g><text x="343" y="170" fill="#75856d" font-size="13">ε</text><text x="67" y="35" fill="#75856d" font-size="13">σ</text>`,`<g stroke="#a28e70" fill="none"><path d="M100 155H330M210 40V155" stroke-width="2"/><circle cx="210" cy="40" r="5" fill="#a28e70"/><path d="M210 40L290 115" stroke-width="5"/><path d="M290 115A110 110 0 0 1 130 115" stroke-dasharray="4 5"/><rect x="277" y="105" width="25" height="28" rx="3" fill="#cbb99b" transform="rotate(-45 290 115)"/><path d="M185 150V135H232V150" stroke-width="3"/></g>`,`<g fill="none" stroke="#6b8d88" transform="translate(110 28)"><path d="M0 0H200V128H0Z"/><path d="M0 0L200 128M40 0L200 102M80 0L200 77M120 0L200 51M160 0L200 26M0 26L160 128M0 51L120 128M0 77L80 128M0 102L40 128M200 0L0 128M160 0L0 102M120 0L0 77M80 0L0 51M40 0L0 26M200 26L40 128M200 51L80 128M200 77L120 128M200 102L160 128" opacity=".6"/></g>`];const extra={fluid:'<g fill="none" stroke="#6b98b1" stroke-width="2"><path d="M45 55H375M45 85Q180 85 240 65T375 45M45 115Q200 115 265 95T375 75M45 145Q200 145 270 125T375 105"/><path d="M90 160L330 160L330 120Z" fill="#aec7d6" stroke="#66879a"/></g>',design:'<g fill="#cededb" stroke="#6d918a" stroke-width="2"><path d="M120 45L250 25L325 65V140L195 165L120 120Z"/><path d="M120 45L195 85L325 65M195 85V165" fill="none"/><ellipse cx="258" cy="110" rx="27" ry="30" fill="#eef3f0"/><path d="M130 125V173M305 146V178M195 165V185"/><path d="M250 25V8M135 45V22"/></g>',ai:'<g fill="#e5e7f2" stroke="#8790b2" stroke-width="2"><rect x="55" y="68" width="75" height="65" rx="10"/><rect x="174" y="45" width="80" height="105" rx="14"/><circle cx="330" cy="100" r="36"/><path d="M130 100H174M254 100H294"/><path d="M214 64V131M191 84H238M191 112H238"/><path d="M330 100Q300 75 330 72Q360 75 330 100Q350 130 365 107Q365 83 330 100Q295 100 309 126Q330 142 330 100" fill="#bcc7dc"/></g>'};return `<svg viewBox="0 0 420 200" aria-hidden="true">${extra[category]||illustrations[index%4]}</svg>`;}
 function projectMeta(p){return `<div class="project-meta"><span>${esc(p.organization||'교과목·기관 추후 입력')}</span><span>${esc(p.period||'진행 연월 추후 입력')}</span></div>`;}
 function completionButton(p){return p.completionLabel?`<button class="small-button" data-library="${esc(p.id)}-completion">${esc(p.completionLabel)} ↗</button>`:'';}
-function renderProjects(filter='all'){$('#project-grid').innerHTML=P.projects.filter(p=>filter==='all'||p.category===filter).map(p=>{const i=P.projects.indexOf(p);return `<article class="project-card"><div class="project-visual"><span class="number">PROJECT ${String(i+1).padStart(2,'0')}</span><span class="concept">개념 일러스트</span>${art(i,p.category)}<span class="visual-caption">${esc(p.tools[0]||'ENGINEERING STUDY')}</span></div><div class="tags">${p.tools.map(t=>`<span>${esc(t)}</span>`).join('')}</div><h3>${esc(p.title)}</h3>${projectMeta(p)}<p>${esc(p.summary)}</p><div class="card-bottom"><span class="category-label">${esc(names[p.category])}</span><button class="detail-button" data-project="${esc(p.id)}">STAR로 살펴보기 ↗</button></div>${completionButton(p)}</article>`;}).join('')||`<div class="empty"><p class="eyebrow">WORK IN PROGRESS</p><h3>${esc(names[filter])} 프로젝트를 준비하고 있습니다.</h3><p>관련 경험이 추가되면 과정과 결과를 이곳에서 소개합니다.</p></div>`;}
+
+// Public figure excerpts; full original files remain in the approved library.
+const projectFigures={
+  "gist": [
+    {
+      "src": "project-gist-pressure.webp",
+      "title": "압력 분포 비교",
+      "caption": "왼쪽 SU2, 오른쪽 Python 코드의 압력 컨투어. 각 색상 막대의 범위를 함께 확인합니다.",
+      "source": "우수성입증자료_인턴쉽.pdf · 13쪽 / 발표 슬라이드 24",
+      "label": "해석 결과"
+    },
+    {
+      "src": "project-gist-temperature.webp",
+      "title": "온도 분포 비교",
+      "caption": "SU2와 Python 코드의 온도 분포를 비교한 결과입니다.",
+      "source": "우수성입증자료_인턴쉽.pdf · 13쪽 / 발표 슬라이드 25",
+      "label": "해석 결과"
+    }
+  ],
+  "phone-bumper": [
+    {
+      "src": "project-fem-models.webp",
+      "title": "범퍼 형상 3종 CAD 모델",
+      "caption": "슬림·Small 범퍼·Full 범퍼의 설계 형상을 비교했습니다. 팀 프로젝트 산출물입니다.",
+      "source": "smartphone_case_FEA_last.pdf · 7쪽",
+      "label": "CAD 모델"
+    },
+    {
+      "src": "project-fem-stress.webp",
+      "title": "TPU 케이스의 충돌 해석",
+      "caption": "TPU 형상별 코너 충돌 해석과 국부 응력 분포입니다. 컨투어별 범위가 다를 수 있어 색만으로 크기를 비교하지 않습니다.",
+      "source": "smartphone_case_FEA_last.pdf · 21쪽",
+      "label": "해석 결과"
+    },
+    {
+      "src": "project-fem-airpocket.webp",
+      "title": "에어포켓 적용 전후 비교",
+      "caption": "3×2×1 mm 포켓 단면, 해석 결과, 시간별 반력을 함께 제시한 개선안입니다.",
+      "source": "smartphone_case_FEA_last.pdf · 24쪽",
+      "label": "설계 개선"
+    }
+  ],
+  "kdia-pvd": [
+    {
+      "src": "project-kdia-reference.webp",
+      "title": "PVD 챔버 구조 참고 이미지",
+      "caption": "설계 제안서에 사용한 제공 도면 기반 참고 이미지입니다. 본인이 완성한 최종 CAD 모델이나 해석 결과를 의미하지 않습니다.",
+      "source": "KDIA_챔버_설계_제안서.pptx · 3번 슬라이드",
+      "label": "구조 참고"
+    }
+  ],
+  "capstone-ai": [
+    {
+      "src": "project-capstone-system.webp",
+      "title": "센서·Arduino·노트북 연결 구성",
+      "caption": "팀 포스터의 시스템 연결도입니다. 본인은 하우징 설계, 센서·Arduino 및 팬·노트북 연결·구동과 문서 작성을 담당했습니다.",
+      "source": "캡스톤디자인2_포스터.pdf · 1쪽",
+      "label": "시스템 구성"
+    },
+    {
+      "src": "project-capstone-co2.webp",
+      "title": "CO₂ 농도 변화 측정",
+      "caption": "팀 실험의 농도 변화 곡선입니다. 포스터의 세로축은 CO₂ 농도(ppm)이며, 가로축 시간 단위와 범례는 원본에 표시되지 않아 추가하지 않았습니다.",
+      "source": "캡스톤디자인2_포스터.pdf · 1쪽",
+      "label": "실험 결과"
+    }
+  ],
+  "knuckle": [
+    {
+      "src": "project-knuckle-fos.webp",
+      "title": "소재·열처리별 안전계수 비교",
+      "caption": "팀의 SolidWorks 해석 결과입니다. Lower A arm에서 6061-T6는 1.142, 7075-T6는 2.016이었습니다. 본인은 소재·열처리 조건 조사를 담당했습니다.",
+      "source": "G6_기계재료설계_6조.pdf · 22쪽",
+      "label": "해석 결과"
+    }
+  ],
+  "tensile": [
+    {
+      "src": "project-tensile-curves.webp",
+      "title": "S45C·DP780 공칭응력–변형률 곡선",
+      "caption": "왼쪽 S45C, 오른쪽 DP780. 두 그래프의 축 범위는 서로 다릅니다. 항복점·최대응력과 0.2% 오프셋선을 표시했습니다.",
+      "source": "조민경_연구관심과경험_원본자료연결.pdf · 4쪽 (인장시험 보고서 그림 4·7 발췌)",
+      "label": "실험 분석"
+    }
+  ],
+  "impact": [
+    {
+      "src": "project-impact-method.webp",
+      "title": "충격 흡수 에너지 계산 구조",
+      "caption": "보고서에서 에너지식을 설명하는 데 사용한 진자 충격시험 도식입니다. 실제 시험 장치 사진이나 측정 결과 그림은 아닙니다.",
+      "source": "결과 레포트 Buckling & Impact test.pdf · 4쪽, 그림 1",
+      "label": "시험 원리"
+    }
+  ],
+  "plastic": [
+    {
+      "src": "project-forming-thickness.webp",
+      "title": "딥드로잉 후 판재 두께 분포",
+      "caption": "BHF 3,750 N 조건의 두께 컨투어와 경로별 두께 그래프. 컵 벽의 최소 두께와 플랜지의 두께 증가를 함께 비교했습니다.",
+      "source": "2025 여름학기 학부연구생 발표자료_조민경.pdf · 14쪽",
+      "label": "성형 해석"
+    }
+  ]
+};
+function projectVisual(p,i){const f=projectFigures[p.id]?.[0];return f?`<div class="project-visual has-figure"><img src="${esc(f.src)}" alt="${esc(f.title)}" loading="lazy" decoding="async"><span class="number">PROJECT ${String(i+1).padStart(2,'0')}</span><span class="concept">${esc(f.label)}</span></div>`:`<div class="project-visual"><span class="concept">개념 일러스트</span>${art(i,p.category)}</div>`;}
+function projectGallery(p){const figures=projectFigures[p.id]||[];return figures.length?`<section class="project-gallery" aria-label="프로젝트 그림"><h3>설계와 해석 기록</h3><p class="gallery-intro">그림을 누르면 크게 볼 수 있습니다.</p>${figures.map(f=>`<figure><a href="${esc(f.src)}" target="_blank" rel="noopener" aria-label="${esc(f.title)} 크게 보기 (새 탭)"><img src="${esc(f.src)}" alt="${esc(f.title+' — '+f.caption)}" loading="lazy" decoding="async"></a><figcaption><strong>${esc(f.title)}</strong><p>${esc(f.caption)}</p><small>출처: ${esc(f.source)}</small></figcaption></figure>`).join('')}</section>`:'';}
+
+function renderProjects(filter='all'){$('#project-grid').innerHTML=P.projects.filter(p=>filter==='all'||p.category===filter).map(p=>{const i=P.projects.indexOf(p);return `<article class="project-card">${projectVisual(p,i)}<div class="tags">${p.tools.map(t=>`<span>${esc(t)}</span>`).join('')}</div><h3>${esc(p.title)}</h3>${projectMeta(p)}<p>${esc(p.summary)}</p><div class="card-bottom"><span class="category-label">${esc(names[p.category])}</span><button class="detail-button" data-project="${esc(p.id)}">STAR로 살펴보기 ↗</button></div>${completionButton(p)}</article>`;}).join('')||`<div class="empty"><p class="eyebrow">WORK IN PROGRESS</p><h3>${esc(names[filter])} 프로젝트를 준비하고 있습니다.</h3><p>관련 경험이 추가되면 과정과 결과를 이곳에서 소개합니다.</p></div>`;}
 $('#headline').textContent=P.profile.headline;$('#intro').textContent=P.profile.intro;
 $('.brand>span:last-child').innerHTML=`${esc(P.profile.name)} <small>PORTFOLIO</small>`;
 document.title=`${P.profile.name} | Mechanical Engineering Portfolio`;
@@ -26,7 +133,7 @@ const categories=[...P.education.map(e=>[e.id,e.school+' 증명서']),...P.certi
 $('#file-category').innerHTML=categories.map(([id,title])=>`<option value="${esc(id)}">${esc(title)}</option>`).join('');
 document.addEventListener('click',async e=>{
  const filter=e.target.closest('[data-filter]');if(filter){$$('[data-filter]').forEach(b=>{b.classList.toggle('active',b===filter);b.setAttribute('aria-pressed',b===filter?'true':'false');});renderProjects(filter.dataset.filter);}
- const project=e.target.closest('[data-project]');if(project){const p=P.projects.find(p=>p.id===project.dataset.project);$('#project-detail').innerHTML=`<p class="eyebrow">${esc(names[p.category])} / PROJECT STORY</p><h2>${esc(p.title)}</h2><p>${esc(p.subtitle)}</p>${projectMeta(p)}<div class="tags">${p.tools.map(t=>`<span>${esc(t)}</span>`).join('')}</div><div class="star-list">${[['S','Situation · 상황','s'],['T','Task · 과제','t'],['A','Action · 행동','a'],['R','Result · 결과','r']].map(([letter,title,key])=>`<div class="star-item"><span class="star-letter">${letter}</span><div><h3>${title}</h3><p>${esc(p[key])}</p></div></div>`).join('')}</div><p class="note">${esc(p.sourceNote||"제공된 경험 자료를 바탕으로 정리했습니다.")}</p><button class="button primary" data-library="${esc(p.id)}">프로젝트 원본 자료 ↗</button> ${completionButton(p)}`;$('#project-dialog').showModal();}
+ const project=e.target.closest('[data-project]');if(project){const p=P.projects.find(p=>p.id===project.dataset.project);$('#project-detail').innerHTML=`<p class="eyebrow">${esc(names[p.category])} / PROJECT STORY</p><h2>${esc(p.title)}</h2><p>${esc(p.subtitle)}</p>${projectMeta(p)}<div class="tags">${p.tools.map(t=>`<span>${esc(t)}</span>`).join('')}</div>${projectGallery(p)}<div class="star-list">${[['S','Situation · 상황','s'],['T','Task · 과제','t'],['A','Action · 행동','a'],['R','Result · 결과','r']].map(([letter,title,key])=>`<div class="star-item"><span class="star-letter">${letter}</span><div><h3>${title}</h3><p>${esc(p[key])}</p></div></div>`).join('')}</div><p class="note">${esc(p.sourceNote||"제공된 경험 자료를 바탕으로 정리했습니다.")}</p><button class="button primary" data-library="${esc(p.id)}">프로젝트 원본 자료 ↗</button> ${completionButton(p)}`;$('#project-dialog').showModal();}
  if(e.target.closest('[data-close]'))e.target.closest('dialog').close();
  const lib=e.target.closest('[data-library]');if(lib||e.target.closest('[data-login]')){selectedCategory=lib?.dataset.library||null;$('#project-dialog').close();$('#library-dialog').showModal();await loadLibrary();}
 });
